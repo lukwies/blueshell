@@ -22,45 +22,42 @@ A python written shell over bluetooth.
 
 ## Prepare devices
 Before using the blueshell you need to pair server and client.
-
-#### Check if bluetoothd is running
+Let's check if the bluetooth daemon is running and bluetooth is enabled.
 ```console
 $ systemctl is-enabled bluetooth
 $ systemctl status bluetooth
-```
 
-#### Check if bluetooth is enabled
-<pre>
 $ rfkill
 $ sudo rfkill unblock bluetooth
-</pre>
+```
 
-#### Start bluetoothctl
-<pre>
+Okay, now let's start the interactive bluetoothctl shell and change some settings.
+```console
 $ bluetoothctl
-</pre>
 
-#### Turn on bluetooth adapter
-<pre>
 [bluetooth]# default-agent
 [bluetooth]# power on
 [bluetooth]# discoverable on
 [bluetooth]# advertise on
-</pre>
+```
 
-#### Scan to find device to pair with
-<pre>
+If we don't know the peers mac address yet, scan for nearby bluetooth devices.
+```console
 [bluetooth]# scan on
-</pre>
 
-#### Pair and trust device
-<pre>
+...
+
+[bluetooth]# scan off
+```
+
+Let's pair with the peer device and trust remote device for further connections.
+```console
 [bluetooth]# pair 00:11:22:33:44:55
 [bluetooth]# trust 00:11:22:33:44:55
-</pre>
+```
 
-#### Show paired devices
-<pre>
+Show all paired devices, the new one should occur within the output list.
+```console
 [bluetooth]# paired-devices
 [bluetooth]# devices
-</pre>
+```
