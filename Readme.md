@@ -1,23 +1,52 @@
 # blueshell
+blueshell (client) is a program for logging into a remote machine via bluetooth
+and for executing commands on that remote machine. It can be run either in server
+or client mode.
 
-A python written shell over bluetooth.
 
 
 ## Usage
-<pre>
+```console
  Usage: blueshell [-vh] [--listen]
                         [--connect=MACADDR]
                         [--port=PORT]
 
- -h, --help   Show helptext and quit
-     --version  Show blueshell version
+ -h, --help               Show helptext and quit
+     --version            Show blueshell version
 
  -c, --connect=MACADDR    Connect to given mac address (client)
  -l, --listen             Bind to default device (server)
      --listen-at=MACADDR  Bind to given mac address (server)
 
  -s, --scan               Scan for bluetooth devices
+```
+
+## Interactive client mode
+When running blueshell in client mode an interactive shell will appear.<br>
+There are three types of commands:
+1. Blueshell internal commands
+2. Commands executed at the server
+3. Commands executed at the client
+
+**Internal commands**<br>
+All blueshell internal commands starting with a slash (**/**).<br>
+<pre>
+<b>/help</b>                Show help for blueshell client
+<b>/info</b>                Get info about connection state
+<b>/put</b> [local-file]    Upload file to server
+<b>/get</b> [remote-file]   Download file from server
+<b>/quit</b>                Disconnect and quit blueshell
 </pre>
+
+**Remote Commands**<br>
+All commands without a prefix are executed at the remote machine (server).<br>
+You can use any unix/linux command you think of (like ls, mkdir, ...) with some
+minor exceptions (ncurses, ...).<br>
+
+**Local Commands**<br>
+Commands starting with a **!** will be executed at the local machine.<br>
+You can use any unix/linux command you think of (like ls, mkdir, ...) with some
+minor exceptions (ncurses, ...).<br>
 
 
 ## Prepare devices
