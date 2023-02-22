@@ -42,12 +42,26 @@ All blueshell internal commands starting with a slash (**/**).<br>
 All commands without a prefix are executed at the remote machine (server).<br>
 You can use any unix/linux command you think of (like ls, mkdir, ...) with some
 minor exceptions (ncurses, ...).<br>
+**NOTE**: Executing remote commands might be disabled at server side.<br>
+<pre>
+<b>[blueshell]</b># ls -la
+total 40
+drwxr-xr-x  5 server server 4096 12 jan 14:59 .
+drwxr-xr-x 58 server server 4096 12 jan 10:31 ..
+drwxr-xr-x  8 server server 4096 30 jan 07:38 .git
+</pre>
 
 **Local Commands**<br>
 Commands starting with a **!** will be executed at the local machine.<br>
 You can use any unix/linux command you think of (like ls, mkdir, ...) with some
 minor exceptions (ncurses, ...).<br>
-
+<pre>
+<b>[blueshell]</b># !ls -la
+total 40
+drwxr-xr-x  5 client client 4096 22 feb 22:52 .
+drwxr-xr-x 58 client client 4096 22 feb 16:56 ..
+drwxr-xr-x  8 client client 4096 22 feb 22:53 .git
+</pre>
 
 ## Prepare devices
 Before using the blueshell you need to pair server and client.
