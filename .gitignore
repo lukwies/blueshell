@@ -1,0 +1,7 @@
+*.sh
+*.o
+a.out
+test*
+blueshell
+pysrc/
+*.txt
