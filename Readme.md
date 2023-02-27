@@ -1,8 +1,7 @@
 # blueshell
 # upcoming next ...
-blueshell (client) is a program for logging into a remote machine via bluetooth
-and for executing commands on that remote machine. It can be run either in server
-or client mode.
+blueshell is a program for logging into a remote machine via bluetooth to execute shell commands.<br>
+Before a connection can be established a blueshell server need to run on the machine you want to control.<br>
 
 
 
@@ -13,11 +12,13 @@ Usage: blueshell [OPTIONS] ...
 -h, --help               Show helptext and quit
     --version            Show blueshell version
 
--c, --connect=MACADDR    Connect to given mac address (client)
--l, --listen             Bind to default device (server)
-    --listen-at=MACADDR  Bind to given mac address (server)
-
+-a, --addr=MAC(/PORT)    Set macaddress (and port)
+-c, --client             Run in client mode
 -s, --scan               Scan for bluetooth devices
+
+-v, --verbose
+-q, --quiet
+
 </pre>
 
 ## Interactive client mode
