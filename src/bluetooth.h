@@ -32,6 +32,12 @@ void bt_print_devinfo(FILE *f, const struct hci_dev_info *info,
 			const char *prefix);
 
 
+/* Scan for nearby bluetooth devices and print a list with the
+ * mac addresses and remote names of these discovered devices.
+ */
+int bt_scan(void);
+
+
 /* Get listening rfcomm socket.
  * \param   addr   Mac address to bind to (Can be NULL)
  * \param   port   Port to listen at
