@@ -1,5 +1,4 @@
 # blueshell
-# upcoming next ...
 blueshell is a program for logging into a remote machine via bluetooth to execute shell commands.<br>
 Before a connection can be established a blueshell server need to run on the machine you want to control.<br>
 
