@@ -5,8 +5,8 @@
 int bt_get_devinfo(struct hci_dev_info *info)
 {
 	int dev;
-	return (dev = hci_get_route(NULL)) != 0 ||
-		hci_devinfo(dev, info) != 0;
+	return ((dev = hci_get_route(NULL)) != 0 ||
+		hci_devinfo(dev, info) != 0) ? -1 : 0;
 }
 
 void bt_print_devinfo(FILE *f, const struct hci_dev_info *info,
@@ -69,7 +69,7 @@ int bt_scan(void)
     	return 0;
 }
 
-int bt_listen(const char *addr, int port, int *fd)
+int bt_listen(const bdaddr_t *addr, int port, int *fd)
 {
 	int    res;
 	struct sockaddr_rc sa = {0};
@@ -80,9 +80,9 @@ int bt_listen(const char *addr, int port, int *fd)
 		return -1;
 	}
 
-	if (addr)
-		str2ba(addr, &sa.rc_bdaddr);
-	else	sa.rc_bdaddr = *BDADDR_ANY;
+	if (!addr)
+		sa.rc_bdaddr = *BDADDR_ANY;
+	else	memcpy(&sa.rc_bdaddr, addr, sizeof(bdaddr_t));
 
 	sa.rc_family  = AF_BLUETOOTH;
 	sa.rc_channel = (uint8_t)port;
@@ -125,7 +125,7 @@ int bt_accept(int fd, int *cfd, struct sockaddr_rc *sa,
 			return -2;
 		}
 	}
-	*cfd = accept(fd, (struct sockaddr*)&sa, &slen);
+	*cfd = accept(fd, (struct sockaddr*)sa, &slen);
 	if (*cfd == -1) {
 		log_error("accept: %s", strerror(errno));
 		return -1;
@@ -133,7 +133,7 @@ int bt_accept(int fd, int *cfd, struct sockaddr_rc *sa,
 	return 0;
 }
 
-int bt_connect(const char *addr, int port, int *fd)
+int bt_connect(const bdaddr_t *addr, int port, int *fd)
 {
 	struct sockaddr_rc sa = {0};
 	int res;
@@ -146,7 +146,7 @@ int bt_connect(const char *addr, int port, int *fd)
 
 	sa.rc_family = AF_BLUETOOTH;
 	sa.rc_channel = (uint8_t)port;
-	str2ba(addr, &sa.rc_bdaddr);
+	memcpy(&sa.rc_bdaddr, addr, sizeof(bdaddr_t));
 
 	res = connect(*fd, (struct sockaddr*)&sa, sizeof(sa));
 	if (res != 0) {
@@ -159,11 +159,12 @@ int bt_connect(const char *addr, int port, int *fd)
 
 int bt_send(int fd, const void *data, size_t len)
 {
-	size_t nsent = 0;
 	int res;
+	size_t nsent = 0;
+	const uint8_t *p = data;
 
 	while (nsent < len) {
-		res = send(fd, data+nsent, len-nsent, 0);
+		res = send(fd, p+nsent, len-nsent, 0);
 		if (res < 0) {
 			log_warn("send: %s", strerror(errno));
 			return -1;
@@ -200,44 +201,70 @@ int bt_recvall(int fd, void *data, size_t len, int timeout_sec)
 {
 	size_t nrecv = 0;
 	int    res;
+	uint8_t *p = (uint8_t*)data;
 
 	while (nrecv < len) {
-		res = bt_recv(fd, data+nrecv, len-nrecv, timeout_sec);
+		res = bt_recv(fd, p+nrecv, len-nrecv, timeout_sec);
 		if (res < 0) return res;
 		nrecv += res;
 	}
+
+//	print_buf("recvall", data, nrecv);
+
 	return 0;
 }
 
 
-
-int bt_parse_addrstr(const char *str, bdaddr_t *mac, uint8_t *port,
-		uint8_t default_port)
+int bt_recv_hdr(int fd, struct bt_hdr *hdr, int timeout_sec)
 {
-	const char *p;
-	int res = 0;
+	int res = bt_recvall(fd, hdr, BT_HDR_SIZE, timeout_sec);
+	if (res < 0) return res;
+	hdr->size = btohl(hdr->size);
+	return 0;
+}
 
-	str2ba("00:00:00:00:00:00", mac);
-	*port = default_port;
+int bt_recv_pckt(int fd, struct bt_hdr *hdr, void *data,
+		size_t len, int timeout_sec)
+{
+	int res;
 
-	p = strchr(str, '/');
-	if (!p) {
-		if (str_isnumber(str)) {
-			*port = (uint8_t)atoi(str);
-		} else {
-			res = str2ba(str, mac);
-		}
+	res = bt_recv_hdr(fd, hdr, timeout_sec);
+	if (res < 0)
+		return res;
+	else if (!hdr->size)
+		return 0;
+	else if (hdr->size > len) {
+		log_warn("recv: buffer size too small "
+			"(%zu > %zu)", hdr->size, len);
+		return -1;
 	}
-	else if (*(p+1) && str_isnumber(p+1)) {
-		if (p != str && p-str == 17) {
-			char buf[32] = {0};
-			memcpy(buf, str, p-str);
-			res = str2ba(buf, mac);
-		}
-		*port = (uint8_t)atoi(p+1);
-	}
-	else {
-		res = -1;
-	}
-	return res;
+	res = bt_recvall(fd, data, hdr->size,
+			timeout_sec);
+	if (res < 0) return -1;
+
+	((char*)data)[hdr->size] = 0;
+	return 0;
+}
+
+int bt_send_pckt(int fd, uint8_t type, uint8_t flags,
+                const void *data, size_t len)
+{
+	int res;
+	struct bt_hdr hdr;
+
+	hdr.type  = type;
+	hdr.flags = flags;
+	hdr.size  = htobl((uint32_t)len);
+
+	printf("send hdr->size: %zu -> %zu\n", len, (size_t)hdr.size);
+
+	res = bt_send(fd, &hdr, BT_HDR_SIZE);
+	if (res < 0) return -1;
+
+	return (len > 0) ? bt_send(fd, data, len) : 0;
+}
+
+void bt_close(int fd)
+{
+	close(fd);
 }

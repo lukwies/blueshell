@@ -13,6 +13,7 @@
 #include <bluetooth/hci.h>
 #include <bluetooth/hci_lib.h>
 
+#include "proto.h"
 
 /* Get information about the default bluetooth device.
  * This can also be used to check if bluetooth is enabled.
@@ -44,7 +45,7 @@ int bt_scan(void);
  * \param   fd     To store the socket
  * \return         Zero on success, -1 on error
  */
-int bt_listen(const char *addr, int port, int *fd);
+int bt_listen(const bdaddr_t *addr, int port, int *fd);
 
 
 /* Accept client connection.
@@ -63,7 +64,7 @@ int bt_accept(int fd, int *cfd, struct sockaddr_rc *csa,
  * \param   fd       To store the connected socket
  * \return           Zero on success, -1 on error
  */
-int bt_connect(const char *addr, int port, int *fd);
+int bt_connect(const bdaddr_t *addr, int port, int *fd);
 
 
 /* Send `len` bytes of given data to peer.
@@ -96,27 +97,22 @@ int bt_recv(int fd, void *data, size_t len, int timeout_sec);
 int bt_recvall(int fd, void *data, size_t len, int timeout_sec);
 
 
-/* Parse macaddress and (optional) port from bluetooth
- * address string.
- *
- * \param   str           Address string to parse
- * \param   mac           Stores mac address
- * \param   port          Stores port
- * \param   default_port  Default port to take if no
- *                        port were provided in str.
- * \return                Zero on success, -1 on error
- *
- * +----------------------+-------------------+------+
- * | Address String       | MAC               | Port |
- * +----------------------+-------------------+------+
- * | aa:bb:cc:dd:ee:ff	  | aa:bb:cc:dd:ee:ff | 0    |
- * | aa:bb:cc:dd:ee:ff/13 | aa:bb:cc:dd:ee:ff | 13   |
- * | /13                  | 00:00:00:00:00:00 | 13   |
- * | 13                   | 00:00:00:00:00:00 | 13   |
- * +----------------------+-------------------+------+
+/* Receive bt_hdr and convert hdr->size to hostbyte order.
+ * \param   fd           Bluetooth socket
+ * \param   hdr          Header context
+ * \param   timeout_sec  Receive timeout in seconds (0=No timeout)
+ * \return  Zero on success, -1 on error, -2 on timeout
  */
-int bt_parse_addrstr(const char *str, bdaddr_t *mac, uint8_t *port,
-		uint8_t default_port);
+int bt_recv_hdr(int fd, struct bt_hdr *, int timeout_sec);
 
+int bt_recv_pckt(int fd, struct bt_hdr *, void *data, size_t len,
+		int timeout_sec);
+
+/* Send packet. */
+int bt_send_pckt(int fd, uint8_t type, uint8_t flags,
+		const void *data, size_t len);
+
+/* Close bluetooth socket. */
+void bt_close(int fd);
 
 #endif
