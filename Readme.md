@@ -4,21 +4,19 @@ blueshell is a program for logging into a remote machine via bluetooth to execut
 Before a connection can be established a blueshell server need to run on the machine you want to control.<br>
 
 
-
 ## Usage
 <pre>
 Usage: blueshell [OPTIONS] ...
 
 -h, --help               Show helptext and quit
-    --version            Show blueshell version
+-v, --verbose            Run in verbose mode
+
+-D, --device-info        Show information about default device
+-s, --scan               Scan for nearby bluetooth devices
 
 -a, --addr=MAC(/PORT)    Set macaddress (and port)
 -c, --client             Run in client mode
--s, --scan               Scan for bluetooth devices
-
--v, --verbose
--q, --quiet
-
+-l, --listen             Run in server mode (default)
 </pre>
 
 ## Interactive client mode
@@ -31,18 +29,14 @@ There are three types of commands:
 **Internal commands**<br>
 All blueshell internal commands starting with a slash (**/**).<br>
 <pre>
-<b>/help</b>                Show help for blueshell client
-<b>/info</b>                Get info about connection state
-<b>/put</b> [local-file]    Upload file to server
-<b>/get</b> [remote-file]   Download file from server
-<b>/quit</b>                Disconnect and quit blueshell
+<b>/help</b>   Show help for blueshell client
+<b>/exit</b>   Disconnect and quit blueshell
 </pre>
 
 **Remote Commands**<br>
 All commands without a prefix are executed at the remote machine (server).<br>
 You can use any unix/linux command you think of (like ls, mkdir, ...) with some
-minor exceptions (ncurses, ...).<br>
-**NOTE**: Executing remote commands might be disabled at server side.<br>
+minor exceptions (ncurses, vi, ...).<br>
 <pre>
 <b>[blueshell]</b># ls -la
 total 40
@@ -54,13 +48,25 @@ drwxr-xr-x  8 server server 4096 30 jan 07:38 .git
 **Local Commands**<br>
 Commands starting with a **!** will be executed at the local machine.<br>
 You can use any unix/linux command you think of (like ls, mkdir, ...) with some
-minor exceptions (ncurses, ...).<br>
+minor exceptions (ncurses, vi, ...).<br>
 <pre>
 <b>[blueshell]</b># !ls -la
 total 40
 drwxr-xr-x  5 client client 4096 22 feb 22:52 .
 drwxr-xr-x 58 client client 4096 22 feb 16:56 ..
 drwxr-xr-x  8 client client 4096 22 feb 22:53 .git
+</pre>
+
+## Install
+Before compiling blueshell you need to install libbluetooth-dev.<br>
+On debian based system type:
+<pre>sudo apt-get install libbluetooth-dev</pre>
+On arch linux type:
+<pre>sudo pacman -S libbluetooth-dev</pre>
+Then go the the blueshell src directory and compile the code.
+<pre>
+$ cd blueshell/src
+$ make
 </pre>
 
 ## Prepare devices
