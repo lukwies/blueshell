@@ -3,6 +3,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <unistd.h>
 
 #include <sys/socket.h>
@@ -109,8 +110,13 @@ int bt_recv_pckt(int fd, struct bt_hdr *, void *data, size_t len,
 		int timeout_sec);
 
 /* Send packet. */
-int bt_send_pckt(int fd, uint8_t type, uint8_t flags,
+int bt_send_pckt(int fd, uint16_t type, uint16_t flags,
 		const void *data, size_t len);
+
+/* Send packet with string data. */
+#define bt_send_pckts(fd, type, flags, str)\
+	bt_send_pckt((fd), (type), (flags), (str), strlen((str)))
+
 
 /* Close bluetooth socket. */
 void bt_close(int fd);

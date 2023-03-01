@@ -35,16 +35,18 @@ int bt_scan(void)
     	char name[248] = { 0 };
     	inquiry_info *ii = NULL;
 
-	log_info("Scanning for devices ...");
-
     	dev_id = hci_get_route(NULL);
-    	fd     = hci_open_dev( dev_id );
-
-    	if (dev_id < 0 || fd < 0) {
-		log_error("Failed to open socket: %s", strerror(errno));
+	if (dev_id < 0) {
+		log_error(strerror(errno));
 		return -1;
-    	}
+	}
+    	fd = hci_open_dev(dev_id);
+	if (fd < 0) {
+		log_error(strerror(errno));
+		return -1;
+	}
 
+	log_info("Scanning for devices ...");
     	len  = 8;
     	max_rsp = 255;
     	flags = IREQ_CACHE_FLUSH;
@@ -171,6 +173,7 @@ int bt_send(int fd, const void *data, size_t len)
 		}
 		nsent += (size_t)res;
 	}
+	logger_logbuf(LOG_DEBUG, "send", data, len);
 	return 0;
 }
 
@@ -209,8 +212,7 @@ int bt_recvall(int fd, void *data, size_t len, int timeout_sec)
 		nrecv += res;
 	}
 
-//	print_buf("recvall", data, nrecv);
-
+	logger_logbuf(LOG_DEBUG, "recv", data, len);
 	return 0;
 }
 
@@ -219,7 +221,7 @@ int bt_recv_hdr(int fd, struct bt_hdr *hdr, int timeout_sec)
 {
 	int res = bt_recvall(fd, hdr, BT_HDR_SIZE, timeout_sec);
 	if (res < 0) return res;
-	hdr->size = btohl(hdr->size);
+	bt_hdr_unpack(hdr);
 	return 0;
 }
 
@@ -246,18 +248,13 @@ int bt_recv_pckt(int fd, struct bt_hdr *hdr, void *data,
 	return 0;
 }
 
-int bt_send_pckt(int fd, uint8_t type, uint8_t flags,
+int bt_send_pckt(int fd, uint16_t type, uint16_t flags,
                 const void *data, size_t len)
 {
 	int res;
 	struct bt_hdr hdr;
 
-	hdr.type  = type;
-	hdr.flags = flags;
-	hdr.size  = htobl((uint32_t)len);
-
-	printf("send hdr->size: %zu -> %zu\n", len, (size_t)hdr.size);
-
+	bt_hdr_pack(&hdr, type, flags, len);
 	res = bt_send(fd, &hdr, BT_HDR_SIZE);
 	if (res < 0) return -1;
 
